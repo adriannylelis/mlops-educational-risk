@@ -1,19 +1,24 @@
 ## Etapa 04 – API de inferência pronta para validação
 
 ### Adicionado
-- Template com validação dos endpoints mínimos e cobertura de testes.
+- Endpoint `POST /predict` com schema de entrada e resposta tipada.
+- Testes de API em `tests/test_api.py` cobrindo `/health` e `/predict`.
+- Serviço `api` no `docker-compose.yml` com execução via Uvicorn.
 
 ### Alterado
-- N/A.
+- `app/main.py` evoluído para carregar modelo, validar payload e retornar score/classe.
+- `docker-compose.yml` com comando de testes incluindo cobertura mínima (`--cov-fail-under=80`).
 
 ### Removido
 - N/A.
 
 ### Decisões Técnicas
 - Escopo restrito a `/health` e `/predict`.
+- Contrato mínimo de inferência mantido com `features` genérico para evitar overengineering de schema.
 
 ### Impacto
-- Facilita validação rápida pela banca e por testes automatizados.
+- API validada localmente via container e pronta para integração nas próximas etapas.
+- Cobertura de testes consolidada acima do mínimo exigido.
 
 ### Riscos Conhecidos
-- Contrato de payload pode exigir ajuste após validação final de dados.
+- Payload genérico pode exigir endurecimento de schema em produção dependendo da governança de dados.

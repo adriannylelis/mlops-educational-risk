@@ -15,8 +15,45 @@ services:
       context: .
       dockerfile: Dockerfile
     working_dir: /workspace
-    command: pytest tests -q
+    command: pytest tests --cov=src --cov=app --cov-report=term --cov-fail-under=80 -q
     environment:
       - PYTHONPATH=/workspace
     volumes:
       - .:/workspace
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /workspace
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    environment:
+      - PYTHONPATH=/workspace
+    volumes:
+      - .:/workspace
+    ports:
+      - "8000:8000"
+
+  monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /workspace
+    command: python -m monitoring.drift_report
+    environment:
+      - PYTHONPATH=/workspace
+    volumes:
+      - .:/workspace
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /workspace
+    command: python -m http.server 8501 --directory /workspace
+    environment:
+      - PYTHONPATH=/workspace
+    volumes:
+      - .:/workspace
+    ports:
+      - "8501:8501"

@@ -1,0 +1,81 @@
+{
+  "generated_at": "2026-02-22T19:28:42.577839+00:00",
+  "baseline_rows": 480,
+  "current_rows": 206,
+  "drift_features": 1,
+  "global_status": "drift",
+  "features": {
+    "INSTITUICAO_ENSINO_ALUNO_2020": {
+      "psi": 0.089152,
+      "status": "stable"
+    },
+    "IDADE_ALUNO_2020": {
+      "psi": 0.054363,
+      "status": "stable"
+    },
+    "ANOS_PM_2020": {
+      "psi": 0.045583,
+      "status": "stable"
+    },
+    "FASE_TURMA_2020": {
+      "psi": 1.132601,
+      "status": "drift"
+    },
+    "PONTO_VIRADA_2020": {
+      "psi": 0.055655,
+      "status": "stable"
+    },
+    "INDE_2020": {
+      "psi": 0.024832,
+      "status": "stable"
+    },
+    "INDE_CONCEITO_2020": {
+      "psi": 0.061411,
+      "status": "stable"
+    },
+    "PEDRA_2020": {
+      "psi": 0.061411,
+      "status": "stable"
+    },
+    "DESTAQUE_IEG_2020": {
+      "psi": 0.055653,
+      "status": "stable"
+    },
+    "DESTAQUE_IDA_2020": {
+      "psi": 0.059221,
+      "status": "stable"
+    },
+    "DESTAQUE_IPV_2020": {
+      "psi": 0.055656,
+      "status": "stable"
+    },
+    "IAA_2020": {
+      "psi": 0.16057,
+      "status": "warning"
+    },
+    "IEG_2020": {
+      "psi": 0.059786,
+      "status": "stable"
+    },
+    "IPS_2020": {
+      "psi": 0.047415,
+      "status": "stable"
+    },
+    "IDA_2020": {
+      "psi": 0.088311,
+      "status": "stable"
+    },
+    "IPP_2020": {
+      "psi": 0.08775,
+      "status": "stable"
+    },
+    "IPV_2020": {
+      "psi": 0.0656,
+      "status": "stable"
+    },
+    "IAN_2020": {
+      "psi": 0.003936,
+      "status": "stable"
+    }
+  }
+}

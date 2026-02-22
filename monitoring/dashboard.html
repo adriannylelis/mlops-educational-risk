@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Drift Report Dashboard</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 24px; }
+      h1 { margin-bottom: 4px; }
+      .meta { color: #444; margin-bottom: 20px; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+      th { background: #f4f4f4; }
+      .stable { color: #1b5e20; font-weight: 600; }
+      .warning { color: #ef6c00; font-weight: 600; }
+      .drift { color: #b71c1c; font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <h1>Monitoramento de Drift (MVP)</h1>
+    <div id="meta" class="meta">Carregando relatório...</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>PSI</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+
+    <script>
+      const meta = document.getElementById('meta');
+      const rows = document.getElementById('rows');
+
+      function rowHtml(feature, info) {
+        return `<tr><td>${feature}</td><td>${info.psi}</td><td class="${info.status}">${info.status}</td></tr>`;
+      }
+
+      fetch('/artifacts/drift_report.json')
+        .then((response) => response.json())
+        .then((report) => {
+          meta.textContent = `Status global: ${report.global_status} | Features com drift: ${report.drift_features} | Baseline: ${report.baseline_rows} | Atual: ${report.current_rows}`;
+          const sorted = Object.entries(report.features).sort((a, b) => b[1].psi - a[1].psi);
+          rows.innerHTML = sorted.map(([feature, info]) => rowHtml(feature, info)).join('');
+        })
+        .catch(() => {
+          meta.textContent = 'Relatório não encontrado. Execute: docker compose run --rm monitor';
+        });
+    </script>
+  </body>
+</html>
