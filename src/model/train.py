@@ -2,10 +2,12 @@ from pathlib import Path
 import json
 
 import joblib
+from sklearn.base import clone
 from sklearn.compose import ColumnTransformer
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import f1_score, precision_score, recall_score
+from sklearn.metrics import average_precision_score, f1_score, precision_score, recall_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -61,19 +63,53 @@ def train_and_save_artifacts(
         stratify=target,
     )
 
-    model = Pipeline(
-        steps=[
-            ("preprocessing", preprocessing),
-            ("classifier", LogisticRegression(max_iter=1000, class_weight="balanced")),
-        ]
-    )
-    model.fit(x_train, y_train)
+    candidate_models = {
+        "logistic_regression": LogisticRegression(max_iter=1000, class_weight="balanced"),
+        "random_forest": RandomForestClassifier(
+            n_estimators=300,
+            random_state=42,
+            class_weight="balanced",
+            min_samples_leaf=3,
+        ),
+    }
 
-    predictions = model.predict(x_test)
+    candidate_metrics = {}
+    trained_candidates = {}
+
+    for candidate_name, classifier in candidate_models.items():
+        model = Pipeline(
+            steps=[
+                ("preprocessing", clone(preprocessing)),
+                ("classifier", classifier),
+            ]
+        )
+        model.fit(x_train, y_train)
+        predictions = model.predict(x_test)
+        probabilities = model.predict_proba(x_test)[:, 1]
+
+        candidate_metrics[candidate_name] = {
+            "recall": float(recall_score(y_test, predictions)),
+            "precision": float(precision_score(y_test, predictions)),
+            "f1": float(f1_score(y_test, predictions)),
+            "pr_auc": float(average_precision_score(y_test, probabilities)),
+        }
+        trained_candidates[candidate_name] = model
+
+    selected_model_name = max(
+        candidate_metrics,
+        key=lambda model_name: (
+            candidate_metrics[model_name]["recall"],
+            candidate_metrics[model_name]["f1"],
+        ),
+    )
+    selected_model = trained_candidates[selected_model_name]
+
     metrics = {
-        "recall": float(recall_score(y_test, predictions)),
-        "precision": float(precision_score(y_test, predictions)),
-        "f1": float(f1_score(y_test, predictions)),
+        "selection_metric": "recall",
+        "selection_tie_breaker": "f1",
+        "selected_model": selected_model_name,
+        "selected_metrics": candidate_metrics[selected_model_name],
+        "candidates": candidate_metrics,
         "rows_train": int(len(x_train)),
         "rows_test": int(len(x_test)),
         "positive_rate": float(target.mean()),
@@ -83,7 +119,7 @@ def train_and_save_artifacts(
     model_path = artifacts_dir / "model.joblib"
     metrics_path = artifacts_dir / "metrics.json"
 
-    joblib.dump(model, model_path)
+    joblib.dump(selected_model, model_path)
     metrics_path.write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
 
 

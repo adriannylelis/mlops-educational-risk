@@ -1,7 +1,27 @@
 {
-  "recall": 0.5714285714285714,
-  "precision": 0.7741935483870968,
-  "f1": 0.6575342465753424,
+  "selection_metric": "recall",
+  "selection_tie_breaker": "f1",
+  "selected_model": "logistic_regression",
+  "selected_metrics": {
+    "recall": 0.5714285714285714,
+    "precision": 0.7741935483870968,
+    "f1": 0.6575342465753424,
+    "pr_auc": 0.8400953600828879
+  },
+  "candidates": {
+    "logistic_regression": {
+      "recall": 0.5714285714285714,
+      "precision": 0.7741935483870968,
+      "f1": 0.6575342465753424,
+      "pr_auc": 0.8400953600828879
+    },
+    "random_forest": {
+      "recall": 0.5238095238095238,
+      "precision": 0.7857142857142857,
+      "f1": 0.6285714285714286,
+      "pr_auc": 0.8260449803546981
+    }
+  },
   "rows_train": 548,
   "rows_test": 138,
   "positive_rate": 0.6122448979591837
