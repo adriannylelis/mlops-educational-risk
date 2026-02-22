@@ -1,0 +1,22 @@
+services:
+  train:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /workspace
+    command: python -m src.model.train
+    environment:
+      - PYTHONPATH=/workspace
+    volumes:
+      - .:/workspace
+
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /workspace
+    command: pytest tests -q
+    environment:
+      - PYTHONPATH=/workspace
+    volumes:
+      - .:/workspace
