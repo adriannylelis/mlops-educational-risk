@@ -8,19 +8,48 @@ import time
 import joblib
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PredictRequest(BaseModel):
-    features: dict[str, Any] = Field(default_factory=dict)
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "features": {
+                    "IDADE_ALUNO_2020": 13,
+                    "ANOS_PM_2020": 4,
+                    "PONTO_VIRADA_2020": "Sim",
+                    "INDE_2020": 7.5,
+                }
+            }
+        }
+    )
+
+    features: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Dicionário de features de entrada para inferência.",
+    )
 
 
 class PredictResponse(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "score_risco": 0.59,
+                "classe_risco": "alto",
+            }
+        }
+    )
+
     score_risco: float
     classe_risco: str
 
 
-app = FastAPI(title="educational-risk-api")
+app = FastAPI(
+    title="Passos Mágicos Risk API",
+    description="API de inferência para predição de risco de defasagem escolar.",
+    version="1.0.0",
+)
 logger = logging.getLogger("api")
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 
@@ -66,12 +95,29 @@ def _load_model() -> Any:
     return joblib.load(model_path)
 
 
-@app.get("/health")
+@app.get("/", tags=["docs"])
+def root() -> dict[str, str]:
+    return {
+        "message": "Passos Mágicos Risk API",
+        "docs": "/docs",
+        "redoc": "/redoc",
+        "openapi": "/openapi.json",
+        "health": "/health",
+        "predict": "/predict",
+    }
+
+
+@app.get("/health", tags=["health"], summary="Health check da API")
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.post("/predict", response_model=PredictResponse)
+@app.post(
+    "/predict",
+    response_model=PredictResponse,
+    tags=["prediction"],
+    summary="Realiza predição de risco",
+)
 def predict(payload: PredictRequest, request: Request) -> PredictResponse:
     try:
         model = _load_model()

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT_ID="${PROJECT_ID:-}"
+PROJECT_ID="${PROJECT_ID:-datathon-mlfiap}"
 REGION="${REGION:-us-central1}"
 REPOSITORY="${REPOSITORY:-mlops-risk}"
 IMAGE_NAME="${IMAGE_NAME:-risk-api}"
