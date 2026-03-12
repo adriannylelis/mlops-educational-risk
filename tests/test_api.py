@@ -23,6 +23,9 @@ def test_predict_endpoint_returns_score_and_class() -> None:
     assert response.status_code == 200
     payload = response.json()
 
-    assert set(payload.keys()) == {"score_risco", "classe_risco"}
+    assert set(payload.keys()) == {"score_risco", "classe_risco", "possivel_motivo"}
     assert 0.0 <= payload["score_risco"] <= 1.0
     assert payload["classe_risco"] in {"alto", "baixo"}
+    assert isinstance(payload["possivel_motivo"], list)
+    assert len(payload["possivel_motivo"]) > 0
+    assert all(isinstance(motivo, str) for motivo in payload["possivel_motivo"])
