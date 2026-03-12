@@ -80,7 +80,7 @@ class PredictResponse(BaseModel):
                 "possivel_motivo": [
                     "Índice de Desenvolvimento Educacional (INDE) = 3.2 (ideal: ≥ 7.0)",
                     "Ponto de Virada (PONTO_VIRADA) = 0 (ideal: 1 (atingido))",
-                    "Pedra (PEDRA) = Quartzo (ideal: Topázio ou Diamante)",
+                    "Índice de Autoavaliação (IAA) = 7.8 (ideal: ≥ 7.0 ✓)",
                 ],
             }
         }
