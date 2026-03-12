@@ -1,0 +1,39 @@
+{
+  "input_path": "base_dados/PEDE_PASSOS_DATASET_FIAP.csv",
+  "output_path": "src/artifacts/training_dataset.csv",
+  "strategy": "longitudinal_panel",
+  "periods": {
+    "2020_to_2021": {
+      "features_year": 2020,
+      "target_column_raw": "DEFASAGEM_2021",
+      "target_rule": "1 quando DEFASAGEM_2021 < 0",
+      "rows": 686
+    },
+    "2021_to_2022": {
+      "features_year": 2021,
+      "target_column_raw": "DEFASAGEM_2022 (computada)",
+      "target_rule": "1 quando (FASE_2022 - num(NIVEL_IDEAL_2022)) < 0",
+      "rows": 862
+    }
+  },
+  "rows_total_input": 1349,
+  "rows_valid_target": 1548,
+  "target_column_model": "target_risco_defasagem",
+  "feature_columns_used": [
+    "INDE",
+    "IAA",
+    "IAN",
+    "IDA",
+    "IEG",
+    "IPP",
+    "IPS",
+    "IPV",
+    "PEDRA",
+    "PONTO_VIRADA",
+    "FASE",
+    "ANO_REFERENCIA"
+  ],
+  "identifier_columns_excluded": [
+    "NOME"
+  ]
+}

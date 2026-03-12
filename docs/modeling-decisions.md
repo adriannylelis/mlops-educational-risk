@@ -1,41 +1,65 @@
-# Decisões de Modelagem — Etapa 02
+# Decisões de Modelagem
 
 ## Objetivo
 Formalizar a regra de formação do dataset de treino para predição de risco de defasagem escolar sem vazamento de informação.
 
-## Definição de target
-- Coluna bruta de referência: `DEFASAGEM_2021`
-- Coluna de modelagem: `target_risco_defasagem`
-- Regra: `target_risco_defasagem = 1` quando `DEFASAGEM_2021 < 0`, caso contrário `0`
-- Linhas consideradas: somente registros com `DEFASAGEM_2021` numérica não nula
+## Estratégia: Dataset Longitudinal (Panel)
 
-## Recorte temporal
-- Janela de predição: prever risco em 2021 com informações disponíveis até 2020
-- Features permitidas no MVP: colunas com sufixo `_2020`
+O modelo é **ano-agnóstico**: usa features do ano N para prever defasagem no ano N+1,
+independente do ano de referência. O dataset é formado empilhando dois períodos:
+
+| Período | Features | Target | Linhas |
+|---------|----------|--------|--------|
+| 2020 → 2021 | Índices e avaliações de 2020 | `DEFASAGEM_2021 < 0` | 686 |
+| 2021 → 2022 | Índices e avaliações de 2021 | `DEFASAGEM_2022 < 0` (computada) | 862 |
+| **Total** | | | **1.548** |
+
+**Motivo**: Aproximadamente dobra o volume de dados, generaliza para novos anos e melhora
+o desempenho sem necessidade de novos dados externos.
+
+## Definição de target
+
+- **Regra**: `target_risco_defasagem = 1` quando defasagem do ano seguinte < 0
+- **Cálculo direto** (2020→2021): `DEFASAGEM_2021 < 0` (coluna fornecida no dataset)
+- **Cálculo derivado** (2021→2022): `(FASE_2022 - número_extraído(NIVEL_IDEAL_2022)) < 0`
+  - Hipótese validada contra `DEFASAGEM_2021`: 92% de correspondência
+- **Linhas consideradas**: somente registros com target calculável (não nulo)
+
+## Features utilizadas
+
+Features comuns aos anos 2020 e 2021, renomeadas sem sufixo de ano:
+
+| Feature | Tipo | Tratamento |
+|---------|------|-----------|
+| `INDE`, `IAA`, `IAN`, `IDA`, `IEG`, `IPP`, `IPS`, `IPV` | Numérica | Imputation mediana + StandardScaler |
+| `PEDRA` | Categórica | Imputation moda + OneHotEncoder |
+| `PONTO_VIRADA` | Booleana → int (1/0/-1) | Imputation mediana + StandardScaler |
+| `FASE` | Numérica | Imputation mediana + StandardScaler |
+| `ANO_REFERENCIA` | Numérica (2020/2021) | Imputation mediana + StandardScaler |
+
+**`ANO_REFERENCIA`** permite ao modelo aprender padrões distintos por período sem criar features separadas.
 
 ## Colunas proibidas por leakage
-1. Todas as colunas de 2021 e 2022
-   - Regra: excluir qualquer coluna com sufixo `_2021` e `_2022`
-   - Motivo: representam informação de período igual ou posterior ao alvo
-2. Identificador nominal
-   - Coluna: `NOME`
-   - Motivo: não generalizável e não representa sinal causal de risco
-3. Target bruta em features
-   - Coluna: `DEFASAGEM_2021`
-   - Motivo: usada apenas para construção do alvo binário
+
+- Todas as colunas do ano-alvo e anos posteriores (ex: features de 2021 quando target é 2021)
+- `NOME` — identificador nominal, sem poder preditivo generalizável
 
 ## Implementação reprodutível
+
 - Script de formação do dataset: `src/data/build_training_dataset.py`
 - Entrada: `base_dados/PEDE_PASSOS_DATASET_FIAP.csv`
 - Saídas:
-  - `artifacts/training_dataset.csv`
-  - `artifacts/training_dataset_metadata.json`
+  - `src/artifacts/training_dataset.csv`
+  - `src/artifacts/training_dataset_metadata.json`
 
 ## Comando de execução
+
 ```bash
 docker compose run --rm train
 ```
 
 ## Decisão anti-overengineering
-- Não aplicar, nesta etapa, seleção avançada de features, tuning extensivo ou múltiplas janelas temporais.
-- Foco em regra auditável, simples e reproduzível para habilitar as próximas etapas.
+
+- Features limitadas às disponíveis nos dois anos de referência (10 índices + FASE + ANO).
+- Sem join com tabelas externas (TbAluno, TbTurma) nesta etapa.
+- Seleção de modelo e hiperparâmetros mantidos simples (sem Optuna/GridSearch).

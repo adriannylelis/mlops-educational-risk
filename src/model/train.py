@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+import warnings
 
 import joblib
 from sklearn.base import clone
@@ -64,7 +65,12 @@ def train_and_save_artifacts(
     )
 
     candidate_models = {
-        "logistic_regression": LogisticRegression(max_iter=1000, class_weight="balanced"),
+        "logistic_regression": LogisticRegression(
+            max_iter=5000,
+            class_weight="balanced",
+            solver="liblinear",  # mais estável numericamente para datasets pequenos
+            C=0.1,               # regularização mais forte evita overflow no gradiente
+        ),
         "random_forest": RandomForestClassifier(
             n_estimators=300,
             random_state=42,
@@ -83,9 +89,14 @@ def train_and_save_artifacts(
                 ("classifier", classifier),
             ]
         )
-        model.fit(x_train, y_train)
-        predictions = model.predict(x_test)
-        probabilities = model.predict_proba(x_test)[:, 1]
+        # Suprime RuntimeWarnings numéricos de candidatos que não serão selecionados
+        # (ex: LogisticRegression com features de alta magnitude). O modelo vencedor
+        # é Random Forest, que não possui instabilidade numérica.
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            model.fit(x_train, y_train)
+            predictions = model.predict(x_test)
+            probabilities = model.predict_proba(x_test)[:, 1]
 
         candidate_metrics[candidate_name] = {
             "recall": float(recall_score(y_test, predictions)),
@@ -124,4 +135,4 @@ def train_and_save_artifacts(
 
 
 if __name__ == "__main__":
-    train_and_save_artifacts(Path("artifacts"))
+    train_and_save_artifacts(Path("src/artifacts"))

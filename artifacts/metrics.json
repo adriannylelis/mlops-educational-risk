@@ -1,28 +1,28 @@
 {
   "selection_metric": "recall",
   "selection_tie_breaker": "f1",
-  "selected_model": "logistic_regression",
+  "selected_model": "random_forest",
   "selected_metrics": {
-    "recall": 0.5714285714285714,
-    "precision": 0.7741935483870968,
-    "f1": 0.6575342465753424,
-    "pr_auc": 0.8400953600828879
+    "recall": 0.776255707762557,
+    "precision": 0.8173076923076923,
+    "f1": 0.7962529274004684,
+    "pr_auc": 0.8518473004215799
   },
   "candidates": {
     "logistic_regression": {
-      "recall": 0.5714285714285714,
-      "precision": 0.7741935483870968,
-      "f1": 0.6575342465753424,
-      "pr_auc": 0.8400953600828879
+      "recall": 0.726027397260274,
+      "precision": 0.8324607329842932,
+      "f1": 0.775609756097561,
+      "pr_auc": 0.842598643072529
     },
     "random_forest": {
-      "recall": 0.5238095238095238,
-      "precision": 0.7857142857142857,
-      "f1": 0.6285714285714286,
-      "pr_auc": 0.8260449803546981
+      "recall": 0.776255707762557,
+      "precision": 0.8173076923076923,
+      "f1": 0.7962529274004684,
+      "pr_auc": 0.8518473004215799
     }
   },
-  "rows_train": 548,
-  "rows_test": 138,
-  "positive_rate": 0.6122448979591837
+  "rows_train": 1238,
+  "rows_test": 310,
+  "positive_rate": 0.7067183462532299
 }

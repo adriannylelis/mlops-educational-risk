@@ -39,7 +39,7 @@ services:
       context: .
       dockerfile: Dockerfile
     working_dir: /workspace
-    command: python -m monitoring.drift_report
+    command: python -m src.monitoring.drift_report
     environment:
       - PYTHONPATH=/workspace
     volumes:

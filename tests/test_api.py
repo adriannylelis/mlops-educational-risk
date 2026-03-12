@@ -16,7 +16,7 @@ def test_health_endpoint() -> None:
 
 
 def test_predict_endpoint_returns_score_and_class() -> None:
-    train_and_save_artifacts(artifacts_dir=Path("artifacts"))
+    train_and_save_artifacts(artifacts_dir=Path("src/artifacts"))
 
     response = client.post("/predict", json={"features": {}})
 

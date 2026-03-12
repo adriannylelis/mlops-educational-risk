@@ -1,12 +1,12 @@
 import json
 from pathlib import Path
 
-from monitoring.drift_report import generate_report
+from src.monitoring.drift_report import generate_report
 
 
 def test_generate_drift_report(tmp_path: Path) -> None:
     output_path = tmp_path / "drift_report.json"
-    training_dataset_path = Path("artifacts/training_dataset.csv")
+    training_dataset_path = Path("src/artifacts/training_dataset.csv")
     source_dataset_path = Path("base_dados/PEDE_PASSOS_DATASET_FIAP.csv")
 
     generate_report(

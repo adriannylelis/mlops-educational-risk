@@ -1,0 +1,18 @@
+{"timestamp": "2026-03-10 16:45:24 UTC", "event": "request", "path": "/health", "method": "GET", "status_code": 200, "latency_ms": 1.95, "score_risco": null, "error": null}
+{"timestamp": "2026-03-10 16:45:25 UTC", "event": "prediction", "score_risco": 0.8873328491583603, "classe_risco": "alto"}
+{"timestamp": "2026-03-10 16:45:25 UTC", "event": "request", "path": "/predict", "method": "POST", "status_code": 200, "latency_ms": 786.56, "score_risco": 0.8873328491583603, "error": null}
+{"timestamp": "2026-03-10 16:46:59 UTC", "event": "request", "path": "/predict", "method": "POST", "status_code": 500, "latency_ms": 374.61, "score_risco": null, "error": "Can't get attribute '_RemainderColsList' on <module 'sklearn.compose._column_transformer' from '/usr/local/lib/python3.11/site-packages/sklearn/compose/_column_transformer.py'>"}
+{"timestamp": "2026-03-10 16:49:40 UTC", "event": "request", "path": "/predict", "method": "POST", "status_code": 500, "latency_ms": 11.7, "score_risco": null, "error": "Can't get attribute '_RemainderColsList' on <module 'sklearn.compose._column_transformer' from '/usr/local/lib/python3.11/site-packages/sklearn/compose/_column_transformer.py'>"}
+{"timestamp": "2026-03-10 16:53:27 UTC", "event": "prediction", "score_risco": 0.8863446108150176, "classe_risco": "alto"}
+{"timestamp": "2026-03-10 16:53:27 UTC", "event": "request", "path": "/predict", "method": "POST", "status_code": 200, "latency_ms": 388.22, "score_risco": 0.8863446108150176, "error": null}
+{"timestamp": "2026-03-10 16:58:12 UTC", "event": "request", "path": "/logs", "method": "GET", "status_code": 200, "latency_ms": 15.79, "score_risco": null, "error": null}
+{"timestamp": "2026-03-10 16:58:44 UTC", "event": "prediction", "score_risco": 0.8863446108150176, "classe_risco": "alto"}
+{"timestamp": "2026-03-10 16:58:44 UTC", "event": "request", "path": "/predict", "method": "POST", "status_code": 200, "latency_ms": 422.04, "score_risco": 0.8863446108150176, "error": null}
+{"timestamp": "2026-03-10 16:58:49 UTC", "event": "request", "path": "/logs", "method": "GET", "status_code": 200, "latency_ms": 1.97, "score_risco": null, "error": null}
+{"timestamp": "2026-03-10 17:02:37 UTC", "event": "prediction", "score_risco": 0.8873328491583603, "classe_risco": "alto"}
+{"timestamp": "2026-03-10 17:02:37 UTC", "event": "request", "path": "/predict", "method": "POST", "status_code": 200, "latency_ms": 444.88, "score_risco": 0.8873328491583603, "error": null}
+{"timestamp": "2026-03-10 17:02:40 UTC", "event": "request", "path": "/logs", "method": "GET", "status_code": 200, "latency_ms": 3.04, "score_risco": null, "error": null}
+{"timestamp": "2026-03-10 19:14:35 UTC", "event": "prediction", "score_risco": 0.9194080382248747, "classe_risco": "alto"}
+{"timestamp": "2026-03-10 19:14:35 UTC", "event": "request", "path": "/predict", "method": "POST", "status_code": 200, "latency_ms": 57.98, "score_risco": 0.9194080382248747, "error": null}
+{"timestamp": "2026-03-10 19:58:17 UTC", "event": "prediction", "score_risco": 0.39167639882746264, "classe_risco": "baixo"}
+{"timestamp": "2026-03-10 19:58:17 UTC", "event": "request", "path": "/predict", "method": "POST", "status_code": 200, "latency_ms": 39.62, "score_risco": 0.39167639882746264, "error": null}
