@@ -6,6 +6,10 @@ on:
       - master
   workflow_dispatch:  # Permite execução manual
 
+permissions:
+  contents: read
+  deployments: write
+
 env:
   REGION: us-central1
   REPOSITORY: mlops-risk
@@ -120,36 +124,54 @@ jobs:
       - name: Test deployment
         run: |
           echo "🧪 Testing deployment at ${{ steps.get-url.outputs.url }}"
-          
-          # Wait for service to be ready
-          sleep 15
-          
-          # Test health endpoint
-          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ steps.get-url.outputs.url }}/health)
+
+          # Retry health endpoint (Cloud Run pode demorar a ficar pronto)
+          HEALTH_STATUS=""
+          for attempt in {1..12}; do
+            HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ steps.get-url.outputs.url }}/health || true)
+            if [ "$HEALTH_STATUS" = "200" ]; then
+              echo "✅ Health check passed on attempt $attempt"
+              break
+            fi
+            echo "⏳ Health check attempt $attempt/12 returned: $HEALTH_STATUS"
+            sleep 10
+          done
+
           if [ "$HEALTH_STATUS" != "200" ]; then
-            echo "❌ Health check failed with status: $HEALTH_STATUS"
+            echo "❌ Health check failed after retries. Last status: $HEALTH_STATUS"
             exit 1
           fi
-          echo "✅ Health check passed"
-          
-          # Test predict endpoint
-          PREDICT_RESPONSE=$(curl -s -X POST ${{ steps.get-url.outputs.url }}/predict \
-            -H "Content-Type: application/json" \
-            -d '{
-              "INDE": 5.2, "IAA": 6.1, "IAN": 5.8, "IDA": 6.5,
-              "IEG": 7.2, "IPP": 5.9, "IPS": 6.3, "IPV": 5.7,
-              "PEDRA": "Ametista", "PONTO_VIRADA": 0,
-              "FASE": 3, "ANO_REFERENCIA": 2021
-            }')
-          
-          if echo "$PREDICT_RESPONSE" | grep -q "score_risco"; then
-            echo "✅ Predict endpoint working"
-            echo "Response: $PREDICT_RESPONSE"
-          else
-            echo "❌ Predict endpoint failed"
+
+          # Retry predict endpoint
+          PREDICT_RESPONSE=""
+          PREDICT_OK="false"
+          for attempt in {1..6}; do
+            PREDICT_RESPONSE=$(curl -s -X POST ${{ steps.get-url.outputs.url }}/predict \
+              -H "Content-Type: application/json" \
+              -d '{
+                "INDE": 5.2, "IAA": 6.1, "IAN": 5.8, "IDA": 6.5,
+                "IEG": 7.2, "IPP": 5.9, "IPS": 6.3, "IPV": 5.7,
+                "PEDRA": "Ametista", "PONTO_VIRADA": 0,
+                "FASE": 3, "ANO_REFERENCIA": 2021
+              }')
+
+            if echo "$PREDICT_RESPONSE" | grep -q "score_risco"; then
+              PREDICT_OK="true"
+              echo "✅ Predict endpoint working on attempt $attempt"
+              break
+            fi
+
+            echo "⏳ Predict attempt $attempt/6 did not return expected payload"
+            sleep 5
+          done
+
+          if [ "$PREDICT_OK" != "true" ]; then
+            echo "❌ Predict endpoint failed after retries"
             echo "Response: $PREDICT_RESPONSE"
             exit 1
           fi
+
+          echo "Response: $PREDICT_RESPONSE"
       
       - name: Deployment Summary
         run: |
@@ -170,6 +192,7 @@ jobs:
           echo "- **Time:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
       
       - name: Create GitHub deployment
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           script: |
