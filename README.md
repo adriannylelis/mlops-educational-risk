@@ -6,6 +6,8 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.116-009688)](https://fastapi.tiangolo.com/)
 [![Tests](https://img.shields.io/badge/Tests-4%2F4%20passing-success)](tests/)
 [![Coverage](https://img.shields.io/badge/Coverage-91%25-brightgreen)](tests/)
+[![CI](https://github.com/adriannylelis/mlops-educational-risk/actions/workflows/ci.yml/badge.svg)](https://github.com/adriannylelis/mlops-educational-risk/actions/workflows/ci.yml)
+[![Deploy](https://github.com/adriannylelis/mlops-educational-risk/actions/workflows/deploy.yml/badge.svg)](https://github.com/adriannylelis/mlops-educational-risk/actions/workflows/deploy.yml)
 
 ---
 
@@ -14,12 +16,14 @@
 1. [Problema de Negócio](#-problema-de-negócio)
 2. [Arquitetura e Componentes](#-arquitetura-e-componentes)
 3. [Instruções para Subir o Ambiente](#-instruções-para-subir-o-ambiente)
-4. [Pipeline de Machine Learning](#-pipeline-de-machine-learning)
-5. [Métricas e Confiabilidade do Modelo](#-métricas-e-confiabilidade-do-modelo)
-6. [Testes e Qualidade](#-testes-e-qualidade)
-7. [API e Explicabilidade](#-api-e-explicabilidade)
-8. [Monitoramento](#-monitoramento)
-9. [Decisões Técnicas](#-decisões-técnicas)
+4. [Deploy em Produção (GCP)](#-deploy-em-produção-gcp)
+5. [CI/CD Automático (GitHub Actions)](#-cicd-automático-github-actions)
+6. [Pipeline de Machine Learning](#-pipeline-de-machine-learning)
+7. [Métricas e Confiabilidade do Modelo](#-métricas-e-confiabilidade-do-modelo)
+8. [Testes e Qualidade](#-testes-e-qualidade)
+9. [API e Explicabilidade](#-api-e-explicabilidade)
+10. [Monitoramento](#-monitoramento)
+11. [Decisões Técnicas](#-decisões-técnicas)
 
 ---
 
@@ -175,6 +179,199 @@ Gera `src/artifacts/drift_report.json` com PSI de cada feature.
 docker compose up dashboard
 ```
 **Dashboard disponível em:** `http://localhost:8501/src/monitoring/dashboard.html`
+
+---
+
+## 🌐 Deploy em Produção (GCP)
+
+### Configuração Inicial (Uma vez)
+
+**Pré-requisitos:**
+- Conta Google Cloud ativa
+- Google Cloud SDK instalado e autenticado
+- Billing habilitado no projeto
+
+**Documentação completa:** [docs/gcp-setup.md](docs/gcp-setup.md)
+
+### Deploy Rápido (Cloud Run)
+
+```bash
+# Configurar projeto GCP
+export PROJECT_ID="seu-projeto-gcp"
+
+# Deploy automático (build + deploy)
+PROJECT_ID=$PROJECT_ID ./scripts/deploy_cloud_run.sh
+```
+
+**O script executa automaticamente:**
+1. ✅ Habilita APIs necessárias (Cloud Build, Artifact Registry, Cloud Run)
+2. ✅ Cria repositório Docker no Artifact Registry
+3. ✅ Constrói imagem com Cloud Build
+4. ✅ Faz deploy no Cloud Run
+5. ✅ Retorna URL pública da API
+
+**Saída esperada:**
+```
+✅ Deploy concluído com sucesso!
+────────────────────────────────────────
+🌐 URL do serviço: https://risk-api-xxxxx-uc.a.run.app
+
+📚 Endpoints disponíveis:
+  • Health Check: https://risk-api-xxxxx-uc.a.run.app/health
+  • Predict: https://risk-api-xxxxx-uc.a.run.app/predict
+  • Docs (Swagger): https://risk-api-xxxxx-uc.a.run.app/docs
+```
+
+### Verificar Deploy
+
+```bash
+# Health check
+curl https://risk-api-xxxxx-uc.a.run.app/health
+
+# Predição de exemplo
+curl -X POST https://risk-api-xxxxx-uc.a.run.app/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "INDE": 5.2, "IAA": 6.1, "IAN": 5.8, "IDA": 6.5,
+    "IEG": 7.2, "IPP": 5.9, "IPS": 6.3, "IPV": 5.7,
+    "PEDRA": "Ametista", "PONTO_VIRADA": 0,
+    "FASE": 3, "ANO_REFERENCIA": 2021
+  }'
+```
+
+### Configurações Avançadas
+
+**Variáveis disponíveis:**
+```bash
+PROJECT_ID=meu-projeto \
+REGION=us-central1 \
+MEMORY=1Gi \
+CPU=2 \
+MAX_INSTANCES=20 \
+./scripts/deploy_cloud_run.sh
+```
+
+**Monitorar logs em produção:**
+```bash
+gcloud run services logs tail risk-api \
+  --region=us-central1 \
+  --project=$PROJECT_ID
+```
+
+**Custos estimados:**
+- 10.000 requisições/mês: ~$0 (tier gratuito)
+- 100.000 requisições/mês: ~$2-5
+- 1 milhão requisições/mês: ~$20-40
+
+---
+
+## 🔄 CI/CD Automático (GitHub Actions)
+
+### Deploy Automático na Master
+
+O repositório está configurado com **GitHub Actions** para CI/CD automático:
+
+**Quando você faz push para `master`:**
+1. ✅ Testes rodam automaticamente
+2. ✅ Modelo é re-treinado
+3. ✅ Build da imagem Docker
+4. ✅ Push para Artifact Registry
+5. ✅ Deploy no Cloud Run
+6. ✅ Testes de smoke (health + predict)
+
+**Tempo total:** ~5-8 minutos
+
+### Configuração Inicial (Uma vez)
+
+#### Passo 1: Criar Service Account
+```bash
+export PROJECT_ID="seu-projeto-gcp"
+PROJECT_ID=$PROJECT_ID ./scripts/setup_github_actions.sh
+```
+
+**O script irá:**
+- Criar service account `github-actions-deploy`
+- Aplicar permissões necessárias
+- Gerar chave JSON
+- Exibir instruções para adicionar no GitHub
+
+#### Passo 2: Adicionar Secrets no GitHub
+
+1. Acesse: `https://github.com/SEU_USUARIO/mlops-educational-risk/settings/secrets/actions`
+
+2. Adicione os secrets:
+
+| Secret | Valor | Como obter |
+|--------|-------|------------|
+| `GCP_PROJECT_ID` | ID do projeto GCP | Exibido pelo script |
+| `GCP_SA_KEY` | JSON completo da chave | Copiar output do script |
+
+**Documentação completa:** [docs/github-actions-setup.md](docs/github-actions-setup.md)
+
+### Fluxo de Trabalho
+
+```bash
+# 1. Fazer mudanças em uma branch
+git checkout -b feature/minha-feature
+# ... fazer alterações ...
+git commit -am "feat: adiciona feature"
+git push origin feature/minha-feature
+
+# 2. CI roda automaticamente (testes, linting, build)
+
+# 3. Criar PR e aguardar aprovação
+
+# 4. Merge para master
+git checkout master
+git merge feature/minha-feature
+git push origin master
+
+# 5. Deploy automático inicia! 🚀
+```
+
+### Workflows Configurados
+
+**CI** (`.github/workflows/ci.yml`):
+- Executa em todos os pushes e PRs
+- Testes com cobertura ≥ 80%
+- Linting (flake8, black, isort)
+- Security scan de dependências
+- Build e teste do container
+
+**Deploy** (`.github/workflows/deploy.yml`):
+- Executa apenas na branch `master`
+- Treino do modelo
+- Build e push da imagem
+- Deploy no Cloud Run
+- Validação da API em produção
+
+### Monitorar Execuções
+
+**Via GitHub:**
+- Acesse: `https://github.com/SEU_USUARIO/mlops-educational-risk/actions`
+- Veja logs em tempo real
+- Receba notificações de sucesso/falha
+
+**Via CLI:**
+```bash
+# Instalar GitHub CLI
+brew install gh  # MacOS
+gh auth login
+
+# Ver últimas execuções
+gh run list --workflow=deploy.yml
+
+# Ver logs do último deploy
+gh run view --log
+```
+
+### Deploy Manual (Sem Push)
+
+Você pode disparar deploy manualmente:
+1. Acesse: Actions > Deploy to GCP Cloud Run
+2. Clique em "Run workflow"
+3. Selecione branch "master"
+4. Clique "Run workflow"
 
 ---
 
@@ -601,7 +798,10 @@ docker compose run --rm monitor
 - [Decisões de Modelagem](docs/modeling-decisions.md) — Formação do dataset panel
 - [Seleção de Modelo](docs/model-selection.md) — Comparativo de candidatos
 - [Documentação da API](docs/api-documentacao.md) — Schemas e exemplos
-- [Deploy GCP](docs/gcp-deploy.md) — Instruções para Cloud Run
+- [Deploy GCP - Guia Rápido](docs/gcp-deploy.md) — Instruções para Cloud Run
+- [Configuração Inicial GCP](docs/gcp-setup.md) — Setup completo passo a passo
+- [GitHub Actions - CI/CD](docs/github-actions-setup.md) — Configuração de deploy automático
+- [Quickstart GCP](QUICKSTART-GCP.md) — Deploy em 5 minutos
 
 
 

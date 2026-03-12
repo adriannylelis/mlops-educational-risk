@@ -1,0 +1,86 @@
+# This file specifies files that are intentionally untracked by git and should be
+# ignored when using gcloud builds submit.
+# See gcloud topic gcloudignore for more information.
+
+# Git files
+.git/
+.github/
+.gitignore
+.gitattributes
+
+# Python cache and virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Documentation (não necessária no container de produção)
+docs/
+*.md
+!README.md
+
+# Base de dados local (não deve ir para produção)
+base_dados/
+
+# Notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Docker (não precisa buildar docker dentro do docker)
+docker-compose.yml
+Dockerfile.dev
+
+# Logs locais
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# Build artifacts (serão gerados no container)
+*.egg-info/
+dist/
+build/
+
+# Scripts de desenvolvimento
+scripts/local_*.sh
+scripts/dev_*.sh
+
+# Arquivos de configuração local
+.env
+.env.local
+*.local
+
+# Arquivos grandes desnecessários
+*.csv
+*.parquet
+*.pkl
+*.h5
+*.hdf5
+
+# Exceto os artifacts necessários para o modelo
+!src/artifacts/model.joblib
+!src/artifacts/metrics.json
+!src/artifacts/training_dataset_metadata.json
