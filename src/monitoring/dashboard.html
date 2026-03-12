@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Drift Report Dashboard</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 24px; }
+      h1, h2 { margin-bottom: 4px; }
+      h2 { margin-top: 32px; }
+      .meta { color: #444; margin-bottom: 20px; }
+      table { border-collapse: collapse; width: 100%; margin-bottom: 8px; }
+      th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+      th { background: #f4f4f4; }
+      .stable { color: #1b5e20; font-weight: 600; }
+      .warning { color: #ef6c00; font-weight: 600; }
+      .drift { color: #b71c1c; font-weight: 700; }
+      .alto { color: #b71c1c; font-weight: 600; }
+      .baixo { color: #1b5e20; font-weight: 600; }
+      .log-meta { color: #444; font-size: 0.9em; margin-bottom: 8px; }
+    </style>
+  </head>
+  <body>
+    <h1>Monitoramento — Passos Mágicos Risk API</h1>
+
+    <!-- Drift Report -->
+    <h2>Drift de Features (PSI)</h2>
+    <div id="meta" class="meta">Carregando relatório de drift...</div>
+    <table>
+      <thead>
+        <tr><th>Feature</th><th>PSI</th><th>Status</th></tr>
+      </thead>
+      <tbody id="drift-rows"></tbody>
+    </table>
+
+    <!-- Log de Predições -->
+    <h2>Últimas Predições (via API)</h2>
+    <div id="log-meta" class="log-meta">Carregando logs...</div>
+    <table>
+      <thead>
+        <tr><th>Horário</th><th>Evento</th><th>Path</th><th>Status</th><th>Score Risco</th><th>Classe</th><th>Latência (ms)</th></tr>
+      </thead>
+      <tbody id="log-rows"></tbody>
+    </table>
+
+    <script>
+      // --- Drift Report ---
+      const meta = document.getElementById('meta');
+      const driftRows = document.getElementById('drift-rows');
+
+      function driftRowHtml(feature, info) {
+        return `<tr><td>${feature}</td><td>${info.psi}</td><td class="${info.status}">${info.status}</td></tr>`;
+      }
+
+      fetch('../artifacts/drift_report.json')
+        .then(r => r.json())
+        .then(report => {
+          meta.textContent = `Gerado em: ${report.generated_at} | Status global: ${report.global_status} | Features com drift: ${report.drift_features} | Baseline: ${report.baseline_rows} linhas | Atual: ${report.current_rows} linhas`;
+          const sorted = Object.entries(report.features).sort((a, b) => b[1].psi - a[1].psi);
+          driftRows.innerHTML = sorted.map(([f, i]) => driftRowHtml(f, i)).join('');
+        })
+        .catch(() => {
+          meta.textContent = 'Relatório de drift não encontrado. Execute: docker compose run --rm monitor';
+        });
+
+      // --- Logs da API ---
+      const logMeta = document.getElementById('log-meta');
+      const logRows = document.getElementById('log-rows');
+
+      function logRowHtml(entry) {
+        const ts = entry.timestamp || '—';
+        const event = entry.event || '—';
+        const path = entry.path || (event === 'prediction' ? '/predict' : '—');
+        const status = entry.status_code != null ? entry.status_code : '—';
+        const score = entry.score_risco != null ? entry.score_risco.toFixed(3) : '—';
+        const classe = entry.classe_risco || '—';
+        const latency = entry.latency_ms != null ? entry.latency_ms : '—';
+        const classeClass = entry.classe_risco === 'alto' ? 'alto' : entry.classe_risco === 'baixo' ? 'baixo' : '';
+        return `<tr>
+          <td>${ts}</td>
+          <td>${event}</td>
+          <td>${path}</td>
+          <td>${status}</td>
+          <td>${score}</td>
+          <td class="${classeClass}">${classe}</td>
+          <td>${latency}</td>
+        </tr>`;
+      }
+
+      fetch('http://localhost:8000/logs?n=50')
+        .then(r => r.json())
+        .then(data => {
+          logMeta.textContent = `Total de entradas no log: ${data.total} | Exibindo últimas ${data.logs.length}`;
+          if (data.logs.length === 0) {
+            logRows.innerHTML = '<tr><td colspan="7">Nenhuma entrada de log ainda. Faça chamadas ao /predict.</td></tr>';
+          } else {
+            logRows.innerHTML = [...data.logs].reverse().map(logRowHtml).join('');
+          }
+        })
+        .catch(() => {
+          logMeta.textContent = 'API não acessível em localhost:8000. Suba a API com: docker compose up api';
+          logRows.innerHTML = '<tr><td colspan="7">—</td></tr>';
+        });
+    </script>
+  </body>
+</html>
